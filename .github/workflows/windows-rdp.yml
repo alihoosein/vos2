@@ -45,7 +45,12 @@ jobs:
           $ip = $env:TS_IP ;
           if ($bot -and $chat) {
             $msg = "New Windows VPS Ready!`n`nTailscale IP: $ip`nUser: NvDAdmin`nPass: P@ssw0rd1qazXSW@#`nValid for: 6 Hours" ;
-            Invoke-RestMethod -Uri "https://api.telegram.org/bot$bot/sendMessage" -Method Post -Body @{ chat_id = $chat ; text =$msg } ;
+            $params = @{
+              Uri    = "https://api.telegram.org/bot$bot/sendMessage"
+              Method = "Post"
+              Body   = @{ chat_id = $chat ; text =$msg }
+            } ;
+            Invoke-RestMethod @params ;
           }
 
       - name: 5. Keep Server Alive (up to 5.5 Hours)
@@ -61,11 +66,15 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           $repo = "${{ github.repository }}" ;
-          $url = "https://api.github.com/repos/$repo/actions/workflows/windows-rdp.yml/dispatches" ;
-          $headers = @{
-            "Authorization" = "Bearer $env:GH_PAT"
-            "Accept"        = "application/vnd.github.v3+json"
-            "User-Agent"    = "PowerShell"
+          $json = @{ ref = "main" } | ConvertTo-Json ;
+          $params = @{
+            Uri     = "https://api.github.com/repos/$repo/actions/workflows/windows-rdp.yml/dispatches"
+            Method  = "Post"
+            Headers = @{
+              "Authorization" = "Bearer $env:GH_PAT"
+              "Accept"        = "application/vnd.github.v3+json"
+              "User-Agent"    = "PowerShell"
+            }
+            Body    = $json
           } ;
-          $bodyParams = @{ ref = "main" } | ConvertTo-Json ;
-          Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body$bodyParams ;
+          Invoke-RestMethod @params ;
