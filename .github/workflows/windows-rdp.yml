@@ -32,7 +32,7 @@ jobs:
           & "C:\Program Files\Tailscale\tailscale.exe" up --authkey="$Env:TAILSCALE_AUTHKEY" --hostname="github-rdp-server" ;
           Start-Sleep -Seconds 8 ;
           $ts_ip = & "C:\Program Files\Tailscale\tailscale.exe" ip -4 ;
-          "TS_IP=$ts_ip" \vert{} Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append ;
+          Add-Content -Path $env:GITHUB_ENV -Value "TS_IP=$ts_ip" ;
           Write-Host "Tailscale IP : $ts_ip"
 
       - name: 4. Send Info to Telegram
@@ -70,5 +70,5 @@ jobs:
             "Accept"        = "application/vnd.github.v3+json"
             "User-Agent"    = "PowerShell"
           } ;
-          $bodyData = @{ ref = "main" } | ConvertTo-Json ;
-          Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body$bodyData ;
+          $payload = @{ ref = "main" } | ConvertTo-Json ;
+          Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body$payload ;
