@@ -40,14 +40,12 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          Add-Type -AssemblyName System.Web ;
-          $bot =$env:TELEGRAM_BOT_TOKEN ;
-          $chat =$env:TELEGRAM_CHAT_ID ;
-          $ip =$env:TS_IP ;
-          if ($bot -and $chat) {$rawMsg = "🚀 *New Windows VPS Ready!*`n`n🌐 *Tailscale IP:* `$ip``n👤 *User:* `NvDAdmin``n🔑 *Pass:* `P@ssw0rd1qazXSW@#``n⏳ *Valid for:* 6 Hours" ;
-            $encodedMsg = [System.Web.HttpUtility]::UrlEncode($rawMsg) ;
-            $url = "https://api.telegram.org/bot$bot/sendMessage?chat_id=$chat&text=$encodedMsg&parse_mode=Markdown" ;
-            Invoke-RestMethod -Uri $url -Method Get ;
+          $bot = $env:TELEGRAM_BOT_TOKEN ;
+          $chat = $env:TELEGRAM_CHAT_ID ;
+          $ip = $env:TS_IP ;
+          if ($bot -and $chat) {
+            $msg = "New Windows VPS Ready!`n`nTailscale IP: $ip`nUser: NvDAdmin`nPass: P@ssw0rd1qazXSW@#`nValid for: 6 Hours" ;
+            Invoke-RestMethod -Uri "https://api.telegram.org/bot$bot/sendMessage" -Method Post -Body @{ chat_id = $chat ; text =$msg } ;
           }
 
       - name: 5. Keep Server Alive (up to 5.5 Hours)
@@ -63,12 +61,11 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           $repo = "${{ github.repository }}" ;
-          $workflow = "windows-rdp.yml" ;
-          $url = "https://api.github.com/repos/$repo/actions/workflows/$workflow/dispatches" ;
+          $url = "https://api.github.com/repos/$repo/actions/workflows/windows-rdp.yml/dispatches" ;
           $headers = @{
             "Authorization" = "Bearer $env:GH_PAT"
             "Accept"        = "application/vnd.github.v3+json"
             "User-Agent"    = "PowerShell"
           } ;
-          $payload = @{ ref = "main" } | ConvertTo-Json ;
-          Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body$payload ;
+          $bodyParams = @{ ref = "main" } | ConvertTo-Json ;
+          Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body$bodyParams ;
